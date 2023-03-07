@@ -1,6 +1,8 @@
 # FluTail
 > Tailwindcss's color System for Flutter
 
+> last edited: 3 years ago.
+
 #### Why
 
 One thing I realized about css in the last few months was that having well defined color systems is very beneficial in your day to day workflow. Since tailwindcss has the best set of colors, this is me trying to bring tailwindcss's color system to flutter.. It's about 100 lines of dart code generated from the default tailwindcss configuration file  using the go files above.
