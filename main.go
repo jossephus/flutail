@@ -9,8 +9,9 @@ import (
 	"strings"
 )
 
-const dataFile = "data/tailwind.js"
-const whatToLookFor = "fontSize:"
+const dataFile = "stubs/tailwind.js"
+const outputFile = "stubs/tailwindColors.dart"
+const whatToLookFor = "colors:"
 
 func main() {
 
@@ -30,9 +31,8 @@ func main() {
 	tailwindstring := string(tailwind)
 
 	i := strings.Index(tailwindstring, whatToLookFor)
-	
-	partToBeFiltered := tailwindstring[i:]
 
+	partToBeFiltered := tailwindstring[i:]
 
 	var openingBraces []rune
 	var closingBraces []rune
@@ -56,8 +56,6 @@ func main() {
 	// len(whatToLookFor) + 2 => 1 for  let's get what's taken from us => 1 for I don't know
 	whatWeReallyWant := partToBeFiltered[:lastIndex+len(whatToLookFor)+2]
 
-
-
 	Analayze(whatWeReallyWant)
 }
 
@@ -69,33 +67,18 @@ func Analayze(data string) {
 		}
 		return false
 	})
-	/*
-		fmt.Println(splitted)
-		for _ , v := range splitted {
-			fmt.Println(v)
-		 }
-	*/
 
 	var splittedTrimmed []string
 
-	fmt.Println(splitted);
-
-
-	fmt.Println()
-	fmt.Println()
-	fmt.Println()
-
-	fmt.Println(splitted[1:len(splitted)-1])
-
-	return 
-
+	// splitted[1:len(splitted - 1)] => let's remove the whatToLookFor Part
 	foreach(splitted[1:len(splitted)-1], func(s string) {
 		splittedTrimmed = append(splittedTrimmed, strings.TrimSpace(s))
 	})
 
-	var NotGrouped = make(map[string]string)
+	// This is where the main things happen It can be refactored to work with other filters
+	var notGrouped = make(map[string]string)
 	var upperColor string
-	var GroupedSlice = make(map[string][]map[string]string)
+	var groupedSlice = make(map[string][]map[string]string)
 
 	flag := false
 
@@ -108,33 +91,31 @@ func Analayze(data string) {
 			//fmt.Println(s)
 		}
 		if strings.Index(s, "}") != -1 {
+
 			flag = false
 			return
 		}
 		if !flag {
-			//	fmt.Printf("%skkk\n", strings.TrimSpace(s))
 
 			name, color := getUngroupedNameAndColor(strings.TrimSpace(s))
-			NotGrouped[name] = color
-			//	NotGrouped[strings.TrimSpace(s)] = strings.TrimSpace(s)
-			//fmt.Println(NotGrouped[s])
+			notGrouped[name] = color
 			return
 		}
 		name, color := getGroupedNameAndColor(strings.TrimSpace(s))
 
-		GroupedSlice[upperColor] = append(GroupedSlice[upperColor], map[string]string{
+		groupedSlice[upperColor] = append(groupedSlice[upperColor], map[string]string{
 			name: color,
 		})
 	})
 	fmt.Println("Whoo")
 
-	// for k, v := range NotGrouped {
+	// for k, v := range notGrouped {
 	// 	fmt.Printf("%s\t\t=>\t\t%s\n", k, v)
 	// 	//fmt.Println("key", k, "value", v)
 	// }
 	// fmt.Println()
 	// fmt.Println()
-	// for k, v := range GroupedSlice {
+	// for k, v := range groupedSlice {
 	// 	fmt.Println(k, " { ")
 	// 	for _, sv := range v {
 	// 		for sk, v := range sv {
@@ -145,13 +126,12 @@ func Analayze(data string) {
 	// 	fmt.Println("}")
 	// }
 
-	createDartFileAndWriteMe(NotGrouped, GroupedSlice)
-	// createDartFileAndWriteMe()
+	createDartFileAndWriteMe(notGrouped, groupedSlice)
 
 }
 
 func createDartFileAndWriteMe(notGrouped map[string]string, groupedSlice map[string][]map[string]string) {
-	f, err := os.Create("tailwindColors.dart")
+	f, err := os.Create(outputFile)
 	if err != nil {
 		log.Fatalln("Can not create dart file ")
 	}
@@ -160,18 +140,17 @@ func createDartFileAndWriteMe(notGrouped map[string]string, groupedSlice map[str
 
 	b.WriteString("import 'package:flutter/material.dart';\n")
 
-
 	for k, v := range notGrouped {
 		b.WriteString("const ")
-		b.WriteString("tail" + k )
+		b.WriteString("tail" + k)
 		b.WriteString(" = ")
 		b.WriteString(" Color(" + v + ");")
-		b.WriteRune('\n')	
+		b.WriteRune('\n')
 	}
 
 	// const tailRed100 = Color(0xFF)
 
-	for key , values := range groupedSlice {
+	for key, values := range groupedSlice {
 
 		for _, sv := range values {
 
@@ -185,7 +164,6 @@ func createDartFileAndWriteMe(notGrouped map[string]string, groupedSlice map[str
 			//fmt.Println(k, sv)
 		}
 	}
-
 
 	f.Write([]byte(b.String()))
 
